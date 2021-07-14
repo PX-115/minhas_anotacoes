@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:sqflite/sqflite.dart';
-import 'package:path/path.dart';
+import 'package:minhas_anotacoes/helper/NoteHelper.dart';
 import 'dart:async';
 import 'dart:io';
+import 'package:minhas_anotacoes/model/Notes.dart';
 
 class Home extends StatefulWidget {
   const Home({ Key key }) : super(key: key);
@@ -15,15 +15,24 @@ class _HomeState extends State<Home> {
 
   TextEditingController _controllerAddNoteTitle = TextEditingController();
   TextEditingController _controllerAddNoteDesc = TextEditingController();
+  var _db = NoteHelper();
 
+  _saveNote() async {
 
+    String title = _controllerAddNoteTitle.text;
+    String description = _controllerAddNoteDesc.text;
+
+    Notes notes = Notes(title, description, DateTime.now().toString());
+    int result = await _db.saveNote(notes);
+
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         backgroundColor: Colors.blue[900],
-        title: Text('Anotações'),
+        title: Text("Anotações"),
       ),
 
       body: Column(
@@ -42,7 +51,7 @@ class _HomeState extends State<Home> {
             context: context, 
             builder: (context){
               return AlertDialog(
-                title: Text('Adicionar anotação'),
+                title: Text("Adicionar anotação"),
                 content: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   mainAxisSize: MainAxisSize.min,
@@ -51,8 +60,8 @@ class _HomeState extends State<Home> {
                       controller: _controllerAddNoteTitle,
                       autofocus: true,
                       decoration: InputDecoration(
-                        labelText: 'Título',
-                        hintText: 'Título da sua anotação...'
+                        labelText: "Título",
+                        hintText: "Título da sua anotação..."
                       ),
                       onChanged: (addNoteTitleTextField){},
                     ),
@@ -60,8 +69,8 @@ class _HomeState extends State<Home> {
                     TextField(
                       controller: _controllerAddNoteDesc,
                       decoration: InputDecoration(
-                        labelText: 'Descrição',
-                        hintText: 'Descrição da sua anotação...'
+                        labelText: "Descrição",
+                        hintText: "Descrição da sua anotação..."
                       ),
                       onChanged: (addNoteDescriptionTextField){},
                     ),
@@ -70,12 +79,12 @@ class _HomeState extends State<Home> {
 
                 actions: <Widget>[
                   TextButton(
-                    child: Text('Cancelar'),
+                    child: Text("Cancelar"),
                     onPressed: () => Navigator.pop(context),
                   ),
 
                   TextButton(
-                    child: Text('Salvar'),
+                    child: Text("Salvar"),
                     onPressed: (){}
                   ),
                 ],
