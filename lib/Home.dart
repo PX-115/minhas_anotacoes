@@ -1,99 +1,140 @@
 import 'package:flutter/material.dart';
-import 'package:minhas_anotacoes/helper/NoteHelper.dart';
-import 'dart:async';
-import 'dart:io';
-import 'package:minhas_anotacoes/model/Notes.dart';
+import 'package:minhas_anotacoes/helper/AnotacaoHelper.dart';
+import 'package:minhas_anotacoes/model/Anotacao.dart';
 
 class Home extends StatefulWidget {
-  const Home({ Key key }) : super(key: key);
-
   @override
   _HomeState createState() => _HomeState();
 }
 
 class _HomeState extends State<Home> {
 
-  TextEditingController _controllerAddNoteTitle = TextEditingController();
-  TextEditingController _controllerAddNoteDesc = TextEditingController();
-  var _db = NoteHelper();
+  TextEditingController _controllerTitulo = TextEditingController();
+  TextEditingController _controllerDesc = TextEditingController();
+  var _db = AnotacaoHelper();
+  List<Anotacao> _anotacoes = List<Anotacao>();
 
-  _saveNote() async {
+  _recuperarAnotacoes() async {
 
-    String title = _controllerAddNoteTitle.text;
-    String description = _controllerAddNoteDesc.text;
+    List anotacoesRecuperadas = await _db.recuperarAnotacoes();
 
-    Notes notes = Notes(title, description, DateTime.now().toString());
-    int result = await _db.saveNote(notes);
+    List<Anotacao> listaTemporaria = List<Anotacao>();
+    for( var item in anotacoesRecuperadas ){
 
+      Anotacao anotacao = Anotacao.fromMap( item );
+      listaTemporaria.add( anotacao );
+
+    }
+
+    setState(() {
+      _anotacoes = listaTemporaria;
+    });
+
+    listaTemporaria = null;
+  }
+
+  _salvarAnotacao() async {
+    String titulo = _controllerTitulo.text;
+    String descricao = _controllerDesc.text;
+
+    Anotacao anotacao = Anotacao(titulo, descricao, DateTime.now().toString() );
+    int resultado = await _db.salvarAnotacao( anotacao );
+    print("Salvar anotação: " + resultado.toString() );
+
+    _controllerTitulo.clear();
+    _controllerDesc.clear();
+
+    _recuperarAnotacoes();
+  } 
+
+  _exibirTelaCadastro(){
+    showDialog(
+      context: context,
+      builder: (context){
+        return AlertDialog(
+          title: Text("Adicionar anotação"),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: <Widget>[
+              TextField(
+                controller: _controllerTitulo,
+                autofocus: true,
+                decoration: InputDecoration(
+                  labelText: "Título",
+                  hintText: "Dê um título à sua anotação..."
+                ),
+              ),
+
+              TextField(
+                controller: _controllerDesc,
+                decoration: InputDecoration(
+                    labelText: "Descrição",
+                    hintText: "Dê um descrição à sua anotação..."
+                ),
+              ),
+            ],
+          ),
+          actions: <Widget>[
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: Text("Cancelar")
+            ),
+
+            TextButton(
+              onPressed: (){
+                _salvarAnotacao();
+
+                Navigator.pop(context);
+              },
+              child: Text("Salvar")
+            ),
+          ],
+        );
+      }
+    );
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _recuperarAnotacoes();
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
+        title: Text("Minhas Anotações"),
         backgroundColor: Colors.blue[900],
-        title: Text("Anotações"),
       ),
 
       body: Column(
         children: <Widget>[
-
+          Expanded(
+            child: ListView.builder(
+              itemCount: _anotacoes.length,
+              itemBuilder: (context, index){
+                    
+                final anotacao = _anotacoes[index];
+                    
+                return Card(
+                  child: ListTile(
+                    title: Text( anotacao.titulo ),
+                    subtitle: Text("${anotacao.data} - ${anotacao.descricao}") ,
+                  ),
+                );
+              }
+            ),
+          ),
         ],
       ),
 
       floatingActionButton: FloatingActionButton(
-        backgroundColor: Colors.blue[900],
-        foregroundColor: Colors.white,
-        elevation: 0,
         child: Icon(Icons.add, size: 30),
-        onPressed: (){
-          showDialog(
-            context: context, 
-            builder: (context){
-              return AlertDialog(
-                title: Text("Adicionar anotação"),
-                content: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  mainAxisSize: MainAxisSize.min,
-                  children: <Widget>[
-                    TextField(
-                      controller: _controllerAddNoteTitle,
-                      autofocus: true,
-                      decoration: InputDecoration(
-                        labelText: "Título",
-                        hintText: "Título da sua anotação..."
-                      ),
-                      onChanged: (addNoteTitleTextField){},
-                    ),
-
-                    TextField(
-                      controller: _controllerAddNoteDesc,
-                      decoration: InputDecoration(
-                        labelText: "Descrição",
-                        hintText: "Descrição da sua anotação..."
-                      ),
-                      onChanged: (addNoteDescriptionTextField){},
-                    ),
-                  ],
-                ),
-
-                actions: <Widget>[
-                  TextButton(
-                    child: Text("Cancelar"),
-                    onPressed: () => Navigator.pop(context),
-                  ),
-
-                  TextButton(
-                    child: Text("Salvar"),
-                    onPressed: (){}
-                  ),
-                ],
-              );
-            }
-          );
-        },
-      ),
-
+        foregroundColor: Colors.white,
+        backgroundColor: Colors.blue[900],
+        onPressed: _exibirTelaCadastro,
+      ),    
     );
   }
 }
