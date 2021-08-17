@@ -17,7 +17,6 @@ class Anotacao{
   }
 
   Map toMap(){
-
     Map<String, dynamic> map = {
       AnotacaoHelper.colunaTitulo : this.titulo,
       AnotacaoHelper.colunaDesc : this.descricao,
@@ -30,5 +29,4 @@ class Anotacao{
 
     return map;
   }
-
 }
