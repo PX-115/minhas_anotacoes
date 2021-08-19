@@ -35,13 +35,19 @@ class _HomeState extends State<Home> {
     listaTemporaria = null;
   }
 
-  _salvarAnotacao() async {
+  _salvarAtualizarAnotacao( {Anotacao anotacaoSelecionada} ) async {
     String titulo = _controllerTitulo.text;
     String descricao = _controllerDesc.text;
 
-    Anotacao anotacao = Anotacao(titulo, descricao, DateTime.now().toString() );
-    int resultado = await _db.salvarAnotacao( anotacao );
-    print("Salvar anotação: " + resultado.toString() );
+    if(anotacaoSelecionada == null){
+      Anotacao anotacao = Anotacao(titulo, descricao, DateTime.now().toString() );
+      int resultado = await _db.salvarAnotacao( anotacao );
+    } else {
+      anotacaoSelecionada.titulo = titulo;
+      anotacaoSelecionada.descricao = descricao;
+
+      int resultado = await _db.atualizarAnotacao( anotacaoSelecionada );
+    }
 
     _controllerTitulo.clear();
     _controllerDesc.clear();
@@ -49,12 +55,26 @@ class _HomeState extends State<Home> {
     _recuperarAnotacoes();
   } 
 
-  _exibirTelaCadastro(){
+  _exibirTelaCadastro( {Anotacao anotacao} ){
+    String textoSalvarAtualizar = "";
+
+    if (anotacao == null) {
+      _controllerTitulo.text = "";
+      _controllerDesc.text = "";
+
+      textoSalvarAtualizar = "Salvar";
+    } else {
+      _controllerTitulo.text = anotacao.titulo;
+      _controllerDesc.text = anotacao.descricao;
+
+      textoSalvarAtualizar = "Atualizar";
+    }
+
     showDialog(
       context: context,
       builder: (context){
         return AlertDialog(
-          title: Text("Adicionar anotação"),
+          title: Text("$textoSalvarAtualizar anotação"),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             children: <Widget>[
@@ -84,11 +104,11 @@ class _HomeState extends State<Home> {
 
             TextButton(
               onPressed: (){
-                _salvarAnotacao();
+                _salvarAtualizarAnotacao(anotacaoSelecionada: anotacao);
 
                 Navigator.pop(context);
               },
-              child: Text("Salvar")
+              child: Text(textoSalvarAtualizar)
             ),
           ],
         );
@@ -132,7 +152,28 @@ class _HomeState extends State<Home> {
                 return Card(
                   child: ListTile(
                     title: Text( anotacao.titulo ),
-                    subtitle: Text("${_formatarData(anotacao.data)} - Descrição: ${anotacao.descricao}") ,
+                    subtitle: Text("${_formatarData(anotacao.data)} - Descrição: ${anotacao.descricao}"),
+                    trailing: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: <Widget>[
+                        GestureDetector(
+                          child: Padding(
+                            padding: EdgeInsets.only(right: 16),
+                            child: Icon(Icons.edit, color: Colors.green),           
+                          ),
+                          onTap: (){
+                            _exibirTelaCadastro(anotacao: anotacao);
+                          },
+                        ),
+
+                        GestureDetector(
+                          child: Icon(Icons.delete, color: Colors.red),
+                          onTap: (){
+
+                          },
+                        ),
+                      ],
+                    ),
                   ),
                 );
               }
