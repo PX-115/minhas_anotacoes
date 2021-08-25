@@ -53,7 +53,13 @@ class _HomeState extends State<Home> {
     _controllerDesc.clear();
 
     _recuperarAnotacoes();
-  } 
+  }
+
+  _removerAnotacao(int id) async {
+    await _db.removerAnotacao(id);
+
+    _recuperarAnotacoes();
+  }
 
   _exibirTelaCadastro( {Anotacao anotacao} ){
     String textoSalvarAtualizar = "";
@@ -116,6 +122,52 @@ class _HomeState extends State<Home> {
     );
   }
 
+  _confirmarExclusao(Anotacao anotacao){
+    showDialog(
+      context: context, 
+      builder: (context){
+        return AlertDialog(
+          title: Text("Alerta de exclusão"),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: <Widget>[
+              Text("Deseja realmente excluir este item permanentemente?"),
+
+              Row(
+                mainAxisAlignment: MainAxisAlignment.end,
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: <Widget>[
+                  TextButton(
+                    onPressed: (){
+                      _removerAnotacao(anotacao.id);
+
+                      Navigator.pop(context);
+                    }, 
+                    child: Text(
+                      "Excluir",
+                      style: TextStyle(fontSize: 17)
+                    )
+                  ),
+
+                  Padding(
+                    padding: EdgeInsets.only(left: 20),
+                    child: TextButton(
+                      onPressed: () => Navigator.pop(context), 
+                      child: Text(
+                        "Cancelar",
+                        style: TextStyle(fontSize: 17),
+                      )
+                    )
+                  )
+                ]
+              )
+            ],
+          ),
+        );
+      }
+    );
+  }
+
   _formatarData(String data){
     initializeDateFormatting("pt_BR");
     var formatador = DateFormat("d/MM/y"); 
@@ -169,7 +221,7 @@ class _HomeState extends State<Home> {
                         GestureDetector(
                           child: Icon(Icons.delete, color: Colors.red),
                           onTap: (){
-
+                            _confirmarExclusao(anotacao);
                           },
                         ),
                       ],
